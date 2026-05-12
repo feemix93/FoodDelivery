@@ -16,7 +16,10 @@ export default function LoginForm() {
   });
   const [status, setStatus] = useState<string>("");
 
-  const handleChange = (field: keyof LoginFormState, value: string | boolean) => {
+  const handleChange = (
+    field: keyof LoginFormState,
+    value: string | boolean,
+  ) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
@@ -28,7 +31,9 @@ export default function LoginForm() {
   return (
     <div className="mx-auto w-full max-w-md rounded-3xl border border-zinc-200/75 bg-white p-8 shadow-xl shadow-black/5 dark:border-zinc-800 dark:bg-zinc-950">
       <div className="mb-6 space-y-3">
-        <h2 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">Login</h2>
+        <h2 className="text-3xl font-semibold text-zinc-950 dark:text-zinc-50">
+          Login
+        </h2>
         <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-400">
           Enter your credentials to access your account.
         </p>
@@ -36,7 +41,9 @@ export default function LoginForm() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <label className="block">
-          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Email</span>
+          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            Email
+          </span>
           <input
             type="email"
             value={form.email}
@@ -48,7 +55,9 @@ export default function LoginForm() {
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Password</span>
+          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            Password
+          </span>
           <input
             type="password"
             value={form.password}
@@ -64,12 +73,17 @@ export default function LoginForm() {
             <input
               type="checkbox"
               checked={form.remember}
-              onChange={(event) => handleChange("remember", event.target.checked)}
+              onChange={(event) =>
+                handleChange("remember", event.target.checked)
+              }
               className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
             />
             Remember me
           </label>
-          <button type="button" className="font-medium text-emerald-600 hover:underline">
+          <button
+            type="button"
+            className="font-medium text-emerald-600 hover:underline"
+          >
             Forgot password?
           </button>
         </div>

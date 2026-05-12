@@ -12,7 +12,8 @@ export default function LoginPage() {
             Login to your account
           </h1>
           <p className="max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-400">
-            Use your email and password to sign in and manage your delivery preferences.
+            Use your email and password to sign in and manage your delivery
+            preferences.
           </p>
         </div>
 

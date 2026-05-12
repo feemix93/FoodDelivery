@@ -19,7 +19,8 @@ export default function Home() {
               Welcome to FoodDelivery
             </h1>
             <p className="max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-              Get started by signing up or logging in to manage your orders, favorites, and delivery preferences.
+              Get started by signing up or logging in to manage your orders,
+              favorites, and delivery preferences.
             </p>
           </div>
         </div>

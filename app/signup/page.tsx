@@ -12,7 +12,8 @@ export default function SignupPage() {
             Create your account
           </h1>
           <p className="max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-400">
-            Sign up now to place orders, save favorites, and get faster checkout.
+            Sign up now to place orders, save favorites, and get faster
+            checkout.
           </p>
         </div>
 
