@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 type LoginFormState = {
   email: string;
   password: string;
@@ -15,7 +16,9 @@ export default function LoginForm() {
     remember: false,
   });
   const [status, setStatus] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
+  const router = useRouter();
   const handleChange = (
     field: keyof LoginFormState,
     value: string | boolean,
@@ -23,9 +26,34 @@ export default function LoginForm() {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setStatus("Login submitted. Implement backend integration as needed.");
+    setStatus("");
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: form.email,
+      password: form.password,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+
+    if (data?.user) {
+      localStorage.setItem(
+        "restuarantUser",
+        JSON.stringify({
+          id: data.user.id,
+          email: data.user.email,
+          userMetadata: data.user.user_metadata,
+        }),
+      );
+    }
+    router.push("/restaurant/dashboard");
+    setStatus("Login successful. You are signed in.");
   };
 
   return (
@@ -90,9 +118,10 @@ export default function LoginForm() {
 
         <button
           type="submit"
-          className="inline-flex w-full items-center justify-center rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+          disabled={loading}
+          className="inline-flex w-full items-center justify-center rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-emerald-300"
         >
-          Sign in
+          {loading ? "Signing in..." : "Sign in"}
         </button>
       </form>
 

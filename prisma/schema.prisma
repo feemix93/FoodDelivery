@@ -15,8 +15,21 @@ model Restaurant {
   name        String
   description String?
   rating      Float?
-  reviews     Int?    @default(0)
+  reviews      Int?       @default(0)
   deliveryTime String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  menuItems    MenuItem[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model MenuItem {
+  id           Int         @id @default(autoincrement())
+  name         String
+  description  String?
+  price        Float
+  imageUrl     String?
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
+  restaurantId Int?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }

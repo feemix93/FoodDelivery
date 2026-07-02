@@ -1,11 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function Header() {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [data, setData] = useState();
+  const pathname = usePathname();
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem("restuarantUser");
+    router.push("/");
+  };
 
+  // useEffect(() => {
+  //   const userData = localStorage.getItem("restuarantUser");
+  //   if (!userData) {
+  //     router.push("/");
+  //   } else {
+  //     setData(JSON.parse(userData));
+  //     router.push("/restuarant/dashboard");
+  //   }
+  // }, []);
+  useEffect(() => {
+    const userData = localStorage.getItem("restuarantUser");
+    if (!userData) {
+      router.push("/");
+      return;
+    }
+    setData(JSON.parse(userData));
+    if (pathname === "/login" || pathname === "/signup") {
+      router.push("/restaurant/dashboard");
+    }
+  }, [pathname]);
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 sm:px-8">
@@ -41,18 +71,32 @@ export default function Header() {
 
         {/* User Actions */}
         <div className="flex items-center gap-4">
-          <Link
-            href="/login"
-            className="hidden rounded-lg px-4 py-2 text-sm font-medium text-zinc-950 transition hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800 sm:inline-block"
-          >
-            Login
-          </Link>
-          <Link
-            href="/signup"
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700"
-          >
-            Sign up
-          </Link>
+          {!data && (
+            <Link
+              href="/login"
+              className="hidden rounded-lg px-4 py-2 text-sm font-medium text-zinc-950 transition hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800 sm:inline-block"
+            >
+              Login
+            </Link>
+          )}
+          {data && (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="hidden rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-950 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-800 sm:inline-block"
+            >
+              Logout
+            </button>
+          )}
+
+          {!data && (
+            <Link
+              href="/signup"
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700"
+            >
+              Sign up
+            </Link>
+          )}
 
           {/* Mobile Menu Button */}
           <button
@@ -114,6 +158,13 @@ export default function Header() {
             >
               Login
             </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="block w-full rounded-lg border border-zinc-200 px-4 py-2 text-left text-sm font-medium text-zinc-950 transition hover:bg-white dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-800"
+            >
+              Logout
+            </button>
           </div>
         </div>
       )}

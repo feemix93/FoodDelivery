@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 type SignupFormState = {
   name: string;
@@ -10,6 +12,7 @@ type SignupFormState = {
 };
 
 export default function SignupForm() {
+  const router = useRouter();
   const [form, setForm] = useState<SignupFormState>({
     name: "",
     email: "",
@@ -17,18 +20,48 @@ export default function SignupForm() {
     confirmPassword: "",
   });
   const [status, setStatus] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleChange = (field: keyof SignupFormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setStatus("");
+
     if (form.password !== form.confirmPassword) {
       setStatus("Passwords do not match.");
       return;
     }
-    setStatus("Sign up submitted. Implement backend integration as needed.");
+
+    if (form.password.length < 8) {
+      setStatus("Password must be at least 8 characters.");
+      return;
+    }
+
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: {
+        data: {
+          full_name: form.name,
+        },
+      },
+    });
+    // set item
+
+    setLoading(false);
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+
+    setStatus("Signup successful. Redirecting to your restaurant dashboard...");
+    setForm({ name: "", email: "", password: "", confirmPassword: "" });
+    localStorage.setItem("restuarantUser", JSON.stringify(data.user));
+    router.push("/restaurant/dashboard");
   };
 
   return (
@@ -103,9 +136,10 @@ export default function SignupForm() {
 
         <button
           type="submit"
-          className="inline-flex w-full items-center justify-center rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+          disabled={loading}
+          className="inline-flex w-full items-center justify-center rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-emerald-300"
         >
-          Create account
+          {loading ? "Creating account..." : "Create account"}
         </button>
       </form>
 

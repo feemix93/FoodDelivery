@@ -35,7 +35,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/restaurant"
+                  href="/restauant"
                   className="text-sm text-zinc-400 transition hover:text-white"
                 >
                   Restaurants
