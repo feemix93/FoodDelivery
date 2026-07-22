@@ -23,6 +23,8 @@ export default function RestaurantDashboardPage() {
   });
   const [status, setStatus] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const fetchMenuItems = async () => {
     try {
@@ -33,6 +35,57 @@ export default function RestaurantDashboardPage() {
     } catch (error) {
       console.error(error);
       setStatus("Could not load menu items.");
+    }
+  };
+
+  const handleEdit = (item: MenuItem) => {
+    setEditingItemId(item.id);
+    setForm({
+      name: item.name,
+      description: item.description || "",
+      price: item.price.toString(),
+      imageUrl: item.imageUrl || "",
+    });
+    setStatus("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingItemId(null);
+    setForm({ name: "", description: "", price: "", imageUrl: "" });
+    setStatus("");
+  };
+
+  const handleDelete = async (id: number) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this menu item?",
+    );
+    if (!confirmDelete) return;
+
+    setDeletingId(id);
+    setStatus("");
+
+    try {
+      const response = await fetch(`/api/restaurant/menu?id=${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || "Failed to delete menu item.");
+      }
+
+      setMenuItems((current) => current.filter((item) => item.id !== id));
+      if (editingItemId === id) {
+        handleCancelEdit();
+      }
+      setStatus("Menu item deleted successfully.");
+    } catch (error) {
+      console.error(error);
+      setStatus(
+        error instanceof Error ? error.message : "Failed to delete menu item.",
+      );
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -62,29 +115,51 @@ export default function RestaurantDashboardPage() {
     setLoading(true);
 
     try {
+      const method = editingItemId ? "PATCH" : "POST";
+      const body = {
+        name: form.name,
+        description: form.description,
+        price: priceValue,
+        imageUrl: form.imageUrl,
+        ...(editingItemId ? { id: editingItemId } : {}),
+      };
+
       const response = await fetch("/api/restaurant/menu", {
-        method: "POST",
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          description: form.description,
-          price: priceValue,
-          imageUrl: form.imageUrl,
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data?.error || "Failed to add menu item.");
+        throw new Error(
+          data?.error ||
+            (editingItemId
+              ? "Failed to update menu item."
+              : "Failed to add menu item."),
+        );
       }
 
-      setMenuItems((current) => [data, ...current]);
+      if (editingItemId) {
+        setMenuItems((current) =>
+          current.map((item) => (item.id === data.id ? data : item)),
+        );
+        setStatus("Menu item updated successfully.");
+        setEditingItemId(null);
+      } else {
+        setMenuItems((current) => [data, ...current]);
+        setStatus("Menu item added successfully.");
+      }
+
       setForm({ name: "", description: "", price: "", imageUrl: "" });
-      setStatus("Menu item added successfully.");
     } catch (error) {
       console.error(error);
       setStatus(
-        error instanceof Error ? error.message : "Failed to add menu item.",
+        error instanceof Error
+          ? error.message
+          : editingItemId
+            ? "Failed to update menu item."
+            : "Failed to add menu item.",
       );
     } finally {
       setLoading(false);
@@ -173,6 +248,24 @@ export default function RestaurantDashboardPage() {
                             ${item.price.toFixed(2)}
                           </span>
                         </div>
+
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(item)}
+                            className="rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-950 transition hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(item.id)}
+                            disabled={deletingId === item.id}
+                            className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-950/20 dark:bg-rose-950/10 dark:text-rose-200 dark:hover:bg-rose-900"
+                          >
+                            {deletingId === item.id ? "Deleting..." : "Delete"}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -182,10 +275,12 @@ export default function RestaurantDashboardPage() {
 
             <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
               <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
-                Add menu item
+                {editingItemId ? "Edit menu item" : "Add menu item"}
               </h2>
               <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                Create a new food item for your restaurant menu.
+                {editingItemId
+                  ? "Update the selected menu item or cancel to create a new one."
+                  : "Create a new food item for your restaurant menu."}
               </p>
 
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -243,13 +338,30 @@ export default function RestaurantDashboardPage() {
                   </label>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="inline-flex w-full items-center justify-center rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
-                >
-                  {loading ? "Adding item..." : "Add menu item"}
-                </button>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="inline-flex flex-1 items-center justify-center rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
+                  >
+                    {loading
+                      ? editingItemId
+                        ? "Updating item..."
+                        : "Adding item..."
+                      : editingItemId
+                        ? "Update menu item"
+                        : "Add menu item"}
+                  </button>
+                  {editingItemId ? (
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="inline-flex flex-1 items-center justify-center rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
+                    >
+                      Cancel edit
+                    </button>
+                  ) : null}
+                </div>
               </form>
 
               {status ? (

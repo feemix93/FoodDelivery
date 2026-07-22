@@ -56,6 +56,12 @@ export default function Header() {
             Restaurants
           </Link>
           <Link
+            href="/restaurant/add"
+            className="text-sm font-medium text-zinc-600 transition hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400"
+          >
+            Add restaurant
+          </Link>
+          <Link
             href="#"
             className="text-sm font-medium text-zinc-600 transition hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400"
           >
@@ -139,6 +145,12 @@ export default function Header() {
               className="block text-sm font-medium text-zinc-600 transition hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400"
             >
               Restaurants
+            </Link>
+            <Link
+              href="/restaurant/add"
+              className="block text-sm font-medium text-zinc-600 transition hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400"
+            >
+              Add restaurant
             </Link>
             <Link
               href="#"
