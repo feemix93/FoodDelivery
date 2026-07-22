@@ -6,6 +6,24 @@ import { Header, LoginForm, SignupForm } from "../_components";
 export default function RestaurantPage() {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [location, setLocation] = useState("");
+  const [restaurantSearch, setRestaurantSearch] = useState("");
+  const [cities, setCities] = useState([]);
+
+  const handleSearch = (event) => {
+    event.preventDefault();
+  };
+
+  const filteredRestaurants = restaurants.filter((restaurant) => {
+    const matchesLocation =
+      !location ||
+      (restaurant.city &&
+        restaurant.city.toLowerCase() === location.toLowerCase());
+    const matchesRestaurant =
+      !restaurantSearch ||
+      restaurant.name.toLowerCase().includes(restaurantSearch.toLowerCase());
+    return matchesLocation && matchesRestaurant;
+  });
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -22,7 +40,20 @@ export default function RestaurantPage() {
       }
     };
 
+    const fetchCities = async () => {
+      try {
+        const response = await fetch("/api/restaurant/cities");
+        const data = await response.json();
+        if (response.ok) {
+          setCities(data.cities || []);
+        }
+      } catch (error) {
+        console.error("Failed to load cities", error);
+      }
+    };
+
     fetchRestaurants();
+    fetchCities();
   }, []);
 
   return (
@@ -40,17 +71,57 @@ export default function RestaurantPage() {
               </p>
             </div>
 
+            <form onSubmit={handleSearch} className="grid w-full gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-4 text-sm text-zinc-950 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100">
+                  <span className="font-medium">Search by location</span>
+                  <select
+                    value={location}
+                    onChange={(event) => setLocation(event.target.value)}
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-3 text-sm text-zinc-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+                  >
+                    <option value="">All cities</option>
+                    {cities.map((city) => (
+                      <option key={city} value={city}>
+                        {city}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-4 text-sm text-zinc-950 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100">
+                  <span className="font-medium">Search by restaurant</span>
+                  <input
+                    type="text"
+                    value={restaurantSearch}
+                    onChange={(event) =>
+                      setRestaurantSearch(event.target.value)
+                    }
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-3 text-sm text-zinc-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+                    placeholder="Search restaurants"
+                  />
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                className="flex h-14 items-center justify-center rounded-2xl bg-emerald-600 px-5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+              >
+                Search
+              </button>
+            </form>
+
             {loading ? (
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 Loading restaurants...
               </p>
-            ) : restaurants.length === 0 ? (
+            ) : filteredRestaurants.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
-                No restaurants yet. Add one from the header to get started.
+                No restaurants match your filters.
               </div>
             ) : (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {restaurants.map((restaurant) => (
+                {filteredRestaurants.map((restaurant) => (
                   <div
                     key={restaurant.id}
                     className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
